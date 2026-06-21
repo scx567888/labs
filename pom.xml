@@ -18,6 +18,7 @@
         <module>cocos-decoder</module>
         <module>learn-cgi</module>
         <module>neogeo</module>
+        <module>scx-data-mysql-x</module>
     </modules>
 
     <dependencies>

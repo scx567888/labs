@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.scx</groupId>
+        <artifactId>scx-parent</artifactId>
+        <version>1</version>
+        <relativePath/>
+    </parent>
+
+    <artifactId>scx-data-mysql-x</artifactId>
+    <version>0.0.1</version>
+    <packaging>jar</packaging>
+
+    <name>SCX Data MySQL X</name>
+    <description>
+        SCX Data MySQL X
+    </description>
+    <url>https://github.com/scx-projects/scx-data-mysql-x</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/scx-projects/scx-data-mysql-x/blob/master/LICENSE</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>scx567888</id>
+            <name>scx567888</name>
+            <email>scx567888@outlook.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/scx-projects/scx-data-mysql-x.git</connection>
+        <developerConnection>scm:git:https://github.com/scx-projects/scx-data-mysql-x.git</developerConnection>
+        <url>https://github.com/scx-projects/scx-data-mysql-x</url>
+    </scm>
+
+    <build>
+        <plugins>
+
+            <!-- 此插件用于将项目打包为 可执行 jar 包-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!-- 因为 scx 并不是可执行 jar 包, 所以此处不添加 classpath 到描述文件中 -->
+                            <addClasspath>false</addClasspath>
+                        </manifest>
+                    </archive>
+                    <!-- 此处因为没有类似 maven-source-plugin 插件中 excludeResources 的选项 -->
+                    <!-- 所以在这里手动排除资源文件, 具体文件说明见下方 -->
+                    <excludes>
+                        <!-- 默认 git 占位空文件 -->
+                        <exclude>/.gitkeep</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-data</artifactId>
+            <version>${scx-data.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql-connector-j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-array</artifactId>
+            <version>${scx-array.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-serialize</artifactId>
+            <version>${scx-serialize.version}</version>
+        </dependency>
+
+        <!-- ****************** 以下为测试依赖 ****************** -->
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-logging</artifactId>
+            <version>${scx-logging.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <properties>
+
+        <scx-data.version>0.3.0</scx-data.version>
+        <scx-array.version>0.0.1</scx-array.version>
+        <scx-serialize.version>0.4.0</scx-serialize.version>
+        <mysql-connector-j.version>8.4.0</mysql-connector-j.version>
+        <scx-logging.version>0.0.1</scx-logging.version>
+        <testng.version>7.12.0</testng.version>
+
+    </properties>
+
+</project>
