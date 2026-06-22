@@ -20,6 +20,7 @@
         <module>neogeo</module>
         <module>scx-data-mysql-x</module>
         <module>scx-sql-sqlite</module>
+        <module>scx-sql-sql-server</module>
     </modules>
 
     <dependencies>
