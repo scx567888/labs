@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
 
-    <artifactId>lab</artifactId>
+    <artifactId>labs</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
