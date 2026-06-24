@@ -116,7 +116,7 @@
         <scx-data.version>0.3.0</scx-data.version>
         <scx-array.version>0.0.1</scx-array.version>
         <scx-serialize.version>0.4.0</scx-serialize.version>
-        <mysql-connector-j.version>8.4.0</mysql-connector-j.version>
+        <mysql-connector-j.version>9.7.0</mysql-connector-j.version>
         <scx-logging.version>0.0.1</scx-logging.version>
         <testng.version>7.12.0</testng.version>
 
