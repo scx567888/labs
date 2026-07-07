@@ -2,6 +2,7 @@ package dev.scx.data.mysql_x.test;
 
 import com.mysql.cj.xdevapi.SessionFactory;
 import dev.scx.data.mysql_x.MySQLXRepository;
+import dev.scx.logging.ScxLoggerConfig;
 import dev.scx.logging.ScxLogging;
 import org.testng.annotations.Test;
 
@@ -19,7 +20,8 @@ public class MySQLXDaoTest {
     public static final String databaseName = "scx_dao_test";
 
     static {
-        ScxLogging.rootConfig().setLevel(DEBUG);
+        var rootConfig = ScxLogging.rootConfig();
+        ScxLogging.rootConfig(new ScxLoggerConfig(DEBUG, rootConfig.stackTrace(), rootConfig.recorders()));
     }
 
     public static void main(String[] args) {

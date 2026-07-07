@@ -113,7 +113,7 @@
         <scx-sql.version>0.9.0</scx-sql.version>
         <sqlite-jdbc.version>3.48.0.0</sqlite-jdbc.version>
         <scx-jdbc-spy.version>0.9.0</scx-jdbc-spy.version>
-        <scx-logging.version>0.0.1</scx-logging.version>
+        <scx-logging.version>0.9.0</scx-logging.version>
         <testng.version>7.12.0</testng.version>
 
     </properties>

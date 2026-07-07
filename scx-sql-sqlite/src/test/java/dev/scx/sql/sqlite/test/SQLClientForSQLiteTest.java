@@ -37,7 +37,7 @@ public class SQLClientForSQLiteTest {
     private static final String tableName = "t1";
 
     static {
-        ScxLogging.setConfig("ScxJdbcSpy", new ScxLoggerConfig().setLevel(DEBUG));
+        ScxLogging.config("ScxJdbcSpy", new ScxLoggerConfig(DEBUG, null, null));
         try {
             var tempDir = Path.of(System.getProperty("java.io.tmpdir"));
             TempSQLite = tempDir.resolve("scx_sql_temp").resolve("temp.sqlite");
