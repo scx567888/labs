@@ -114,7 +114,7 @@
     <properties>
 
         <scx-data.version>0.9.0</scx-data.version>
-        <scx-array.version>0.0.1</scx-array.version>
+        <scx-array.version>0.9.0</scx-array.version>
         <scx-serialize.version>0.4.1</scx-serialize.version>
         <mysql-connector-j.version>8.4.0</mysql-connector-j.version>
         <scx-logging.version>0.0.1</scx-logging.version>
