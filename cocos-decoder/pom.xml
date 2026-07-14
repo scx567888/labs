@@ -14,4 +14,47 @@
     <version>0.0.1</version>
     <packaging>jar</packaging>
 
+    <dependencies>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-logging</artifactId>
+            <version>${scx-logging.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-http-x</artifactId>
+            <version>${scx-http-x.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-serialize</artifactId>
+            <version>${scx-serialize.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <properties>
+        <scx-logging.version>0.10.0</scx-logging.version>
+        <scx-http-x.version>0.10.0</scx-http-x.version>
+        <scx-serialize.version>0.10.0</scx-serialize.version>
+        <jsoup.version>1.22.2</jsoup.version>
+        <testng.version>7.12.0</testng.version>
+    </properties>
+
 </project>
