@@ -58,13 +58,17 @@ public class Vector3Math {
 
     /// distance
     public static double distance(Vector3 a, Vector3 b) {
-        return length(sub(a,b));
+        return length(sub(a, b));
+    }
+
+    /// scale
+    public static Vector3 scale(Vector3 a, Vector3 b) {
+        return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
 
     /// reflect
     public static Vector3 reflect(Vector3 direction, Vector3 normal) {
-        var num = -2 * dot(normal, direction);
-        return new Vector3(num * normal.x + direction.x, num * normal.y + direction.y, num * normal.z + direction.z);
+        return sub(direction, mul(normal, 2.0 * dot(direction, normal)));
     }
 
 }
