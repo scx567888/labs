@@ -14,7 +14,7 @@ public class Vector3 {
         this.z = z;
     }
 
-    /// 创建一个副本
+    /// copy
     public Vector3 copy() {
         return new Vector3(x, y, z);
     }
