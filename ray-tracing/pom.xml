@@ -7,7 +7,6 @@
         <groupId>dev.scx</groupId>
         <artifactId>labs</artifactId>
         <version>1.0.0</version>
-        <relativePath/>
     </parent>
 
     <artifactId>ray-tracing</artifactId>
