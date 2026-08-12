@@ -5,17 +5,11 @@
 
     <parent>
         <groupId>dev.scx</groupId>
-        <artifactId>scx-parent</artifactId>
-        <version>1</version>
-        <relativePath/>
+        <artifactId>labs</artifactId>
+        <version>1.0.0</version>
     </parent>
 
-    <artifactId>labs</artifactId>
-    <version>1.0.0</version>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>ray-tracing</module>
-    </modules>
+    <artifactId>ray-tracing</artifactId>
+    <packaging>jar</packaging>
 
 </project>
