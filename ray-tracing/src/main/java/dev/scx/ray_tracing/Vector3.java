@@ -20,33 +20,33 @@ public class Vector3 {
     }
 
     /// add
-    public Vector3 add(Vector3 v3) {
-        return new Vector3(x + v3.x, y + v3.y, z + v3.z);
+    public Vector3 add(Vector3 v) {
+        return new Vector3(x + v.x, y + v.y, z + v.z);
     }
 
     /// sub
-    public Vector3 sub(Vector3 v3) {
-        return new Vector3(x - v3.x, y - v3.y, z - v3.z);
+    public Vector3 sub(Vector3 v) {
+        return new Vector3(x - v.x, y - v.y, z - v.z);
     }
 
     /// mul
-    public Vector3 mul(double d) {
-        return new Vector3(x * d, y * d, z * d);
+    public Vector3 mul(double s) {
+        return new Vector3(x * s, y * s, z * s);
     }
 
     /// div
-    public Vector3 div(double d) {
-        return new Vector3(x / d, y / d, z / d);
+    public Vector3 div(double s) {
+        return new Vector3(x / s, y / s, z / s);
     }
 
     /// dot
-    public double dot(Vector3 v3) {
-        return x * v3.x + y * v3.y + z * v3.z;
+    public double dot(Vector3 v) {
+        return x * v.x + y * v.y + z * v.z;
     }
 
     /// cross
-    public Vector3 cross(Vector3 v3) {
-        return new Vector3(y * v3.z - z * v3.y, z * v3.x - x * v3.z, x * v3.y - y * v3.x);
+    public Vector3 cross(Vector3 v) {
+        return new Vector3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
     }
 
     /// length
