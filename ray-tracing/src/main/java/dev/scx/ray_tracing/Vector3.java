@@ -39,6 +39,11 @@ public class Vector3 {
         return Vector3Math.div(this, s);
     }
 
+    /// scaled
+    public Vector3 scaled(Vector3 s) {
+        return Vector3Math.scale(this, s);
+    }
+
     /// negated
     public Vector3 negated() {
         return Vector3Math.negate(this);
