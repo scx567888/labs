@@ -19,14 +19,24 @@ public class Vector3 {
         return new Vector3(x, y, z);
     }
 
-    /// plus
-    public Vector3 plus(Vector3 v3) {
+    /// add
+    public Vector3 add(Vector3 v3) {
         return new Vector3(x + v3.x, y + v3.y, z + v3.z);
     }
 
-    /// minus
-    public Vector3 minus(Vector3 v3) {
+    /// sub
+    public Vector3 sub(Vector3 v3) {
         return new Vector3(x - v3.x, y - v3.y, z - v3.z);
+    }
+
+    /// mul
+    public Vector3 mul(double d) {
+        return new Vector3(x * d, y * d, z * d);
+    }
+
+    /// div
+    public Vector3 div(double d) {
+        return new Vector3(x / d, y / d, z / d);
     }
 
     /// dot
