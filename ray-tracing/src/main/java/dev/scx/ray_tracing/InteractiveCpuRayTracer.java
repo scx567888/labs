@@ -68,8 +68,8 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
     // Camera
     // =========================================================
-    volatile Vec3 cameraPosition =
-        new Vec3(
+    volatile Vector3 cameraPosition =
+        new Vector3(
             0,
             0.2,
             1.5
@@ -124,33 +124,33 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Vec3
+    // Vector3
     // =========================================================
 
-    static Vec3 gammaCorrect(
-        Vec3 color
+    static Vector3 gammaCorrect(
+        Vector3 color
     ) {
 
-        return new Vec3(
+        return new Vector3(
 
             Math.sqrt(
                 Math.max(
                     0,
-                    color.x()
+                    color.x
                 )
             ),
 
             Math.sqrt(
                 Math.max(
                     0,
-                    color.y()
+                    color.y
                 )
             ),
 
             Math.sqrt(
                 Math.max(
                     0,
-                    color.z()
+                    color.z
                 )
             )
         );
@@ -161,14 +161,14 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
 
     static int toRGB(
-        Vec3 color
+        Vector3 color
     ) {
 
         int r =
             (int)
                 (
                     clamp(
-                        color.x()
+                        color.x
                     )
                         *
                         255
@@ -178,7 +178,7 @@ public class InteractiveCpuRayTracer extends JPanel {
             (int)
                 (
                     clamp(
-                        color.y()
+                        color.y
                     )
                         *
                         255
@@ -188,7 +188,7 @@ public class InteractiveCpuRayTracer extends JPanel {
             (int)
                 (
                     clamp(
-                        color.z()
+                        color.z
                     )
                         *
                         255
@@ -270,7 +270,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
         Material red =
             new Material(
-                new Vec3(
+                new Vector3(
                     0.85,
                     0.12,
                     0.08
@@ -281,7 +281,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
         Material blue =
             new Material(
-                new Vec3(
+                new Vector3(
                     0.08,
                     0.25,
                     0.85
@@ -292,7 +292,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
         Material mirror =
             new Material(
-                new Vec3(
+                new Vector3(
                     0.85,
                     0.85,
                     0.85
@@ -303,7 +303,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
         Material ground =
             new Material(
-                new Vec3(
+                new Vector3(
                     0.55,
                     0.55,
                     0.55
@@ -317,7 +317,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
                 // 中间红球
                 new Sphere(
-                    new Vec3(
+                    new Vector3(
                         0,
                         0,
                         -4
@@ -328,7 +328,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
                 // 左边蓝球
                 new Sphere(
-                    new Vec3(
+                    new Vector3(
                         -2.0,
                         -0.25,
                         -5.0
@@ -339,7 +339,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
                 // 右边镜面球
                 new Sphere(
-                    new Vec3(
+                    new Vector3(
                         2.0,
                         -0.15,
                         -5.5
@@ -350,13 +350,13 @@ public class InteractiveCpuRayTracer extends JPanel {
 
                 // 地面
                 new Plane(
-                    new Vec3(
+                    new Vector3(
                         0,
                         -1,
                         0
                     ),
 
-                    new Vec3(
+                    new Vector3(
                         0,
                         1,
                         0
@@ -369,13 +369,13 @@ public class InteractiveCpuRayTracer extends JPanel {
         scene.light =
             new PointLight(
 
-                new Vec3(
+                new Vector3(
                     -3,
                     5,
                     1
                 ),
 
-                new Vec3(
+                new Vector3(
                     1.0,
                     0.95,
                     0.85
@@ -389,7 +389,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     // Sphere
     // =========================================================
 
-    Vec3 trace(
+    Vector3 trace(
         Ray ray,
         int depth
     ) {
@@ -397,7 +397,7 @@ public class InteractiveCpuRayTracer extends JPanel {
         if (
             depth >= MAX_BOUNCES
         ) {
-            return new Vec3(
+            return new Vector3(
                 0,
                 0,
                 0
@@ -421,7 +421,7 @@ public class InteractiveCpuRayTracer extends JPanel {
             hit.material();
 
         // 少量环境光
-        Vec3 result =
+        Vector3 result =
             material
                 .color()
                 .mul(
@@ -432,7 +432,7 @@ public class InteractiveCpuRayTracer extends JPanel {
         // Point Light
         // =====================================================
 
-        Vec3 toLight =
+        Vector3 toLight =
             scene
                 .light
                 .position()
@@ -443,7 +443,7 @@ public class InteractiveCpuRayTracer extends JPanel {
         double lightDistance =
             toLight.length();
 
-        Vec3 lightDirection =
+        Vector3 lightDirection =
             toLight.mul(
                 1.0 /
                     lightDistance
@@ -507,10 +507,10 @@ public class InteractiveCpuRayTracer extends JPanel {
                         )
                 );
 
-            Vec3 diffuseColor =
+            Vector3 diffuseColor =
                 material
                     .color()
-                    .mul(
+                    .scaled(
                         scene
                             .light
                             .color()
@@ -530,15 +530,15 @@ public class InteractiveCpuRayTracer extends JPanel {
             // Specular
             // =================================================
 
-            Vec3 viewDirection =
+            Vector3 viewDirection =
                 ray
                     .direction()
-                    .negate();
+                    .negated();
 
-            Vec3 reflectedLight =
-                Vec3.reflect(
+            Vector3 reflectedLight =
+                Vector3Math.reflect(
 
-                    lightDirection.negate(),
+                    lightDirection.negated(),
 
                     hit.normal()
                 );
@@ -558,7 +558,7 @@ public class InteractiveCpuRayTracer extends JPanel {
                     64
                 );
 
-            Vec3 specular =
+            Vector3 specular =
                 scene
                     .light
                     .color()
@@ -589,8 +589,8 @@ public class InteractiveCpuRayTracer extends JPanel {
                     MAX_BOUNCES
         ) {
 
-            Vec3 reflectionDirection =
-                Vec3.reflect(
+            Vector3 reflectionDirection =
+                Vector3Math.reflect(
 
                     ray.direction(),
 
@@ -615,7 +615,7 @@ public class InteractiveCpuRayTracer extends JPanel {
             //
             // 递归！
             //
-            Vec3 reflection =
+            Vector3 reflection =
                 trace(
                     reflectionRay,
                     depth + 1
@@ -645,7 +645,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     // Plane
     // =========================================================
 
-    Vec3 sky(
+    Vector3 sky(
         Ray ray
     ) {
 
@@ -653,20 +653,20 @@ public class InteractiveCpuRayTracer extends JPanel {
             0.5
                 *
                 (
-                    ray.direction().y()
+                    ray.direction().y
                         +
                         1.0
                 );
 
-        Vec3 bottom =
-            new Vec3(
+        Vector3 bottom =
+            new Vector3(
                 0.95,
                 0.97,
                 1.0
             );
 
-        Vec3 top =
-            new Vec3(
+        Vector3 top =
+            new Vector3(
                 0.20,
                 0.45,
                 0.85
@@ -692,8 +692,8 @@ public class InteractiveCpuRayTracer extends JPanel {
                 pitch
             );
 
-        Vec3 forward =
-            new Vec3(
+        Vector3 forward =
+            new Vector3(
 
                 Math.sin(yaw)
                     *
@@ -705,28 +705,28 @@ public class InteractiveCpuRayTracer extends JPanel {
                     *
                     cosPitch
 
-            ).normalize();
+            ).normalized();
 
-        Vec3 worldUp =
-            new Vec3(
+        Vector3 worldUp =
+            new Vector3(
                 0,
                 1,
                 0
             );
 
-        Vec3 right =
+        Vector3 right =
             forward
                 .cross(
                     worldUp
                 )
-                .normalize();
+                .normalized();
 
-        Vec3 up =
+        Vector3 up =
             right
                 .cross(
                     forward
                 )
-                .normalize();
+                .normalized();
 
         return new CameraBasis(
             forward,
@@ -742,7 +742,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     Ray cameraRay(
         double pixelX,
         double pixelY,
-        Vec3 origin,
+        Vector3 origin,
         CameraBasis basis
     ) {
 
@@ -799,7 +799,7 @@ public class InteractiveCpuRayTracer extends JPanel {
                 *
                 halfHeight;
 
-        Vec3 direction =
+        Vector3 direction =
             basis
                 .forward()
                 .add(
@@ -833,7 +833,7 @@ public class InteractiveCpuRayTracer extends JPanel {
                 .getData();
 
         // 当前这一帧 Camera 固定下来
-        Vec3 camera =
+        Vector3 camera =
             cameraPosition;
 
         CameraBasis basis =
@@ -863,8 +863,8 @@ public class InteractiveCpuRayTracer extends JPanel {
                     x++
                 ) {
 
-                    Vec3 color =
-                        new Vec3(
+                    Vector3 color =
+                        new Vector3(
                             0,
                             0,
                             0
@@ -960,8 +960,8 @@ public class InteractiveCpuRayTracer extends JPanel {
         CameraBasis basis =
             cameraBasis();
 
-        Vec3 movement =
-            new Vec3(
+        Vector3 movement =
+            new Vector3(
                 0,
                 0,
                 0
@@ -1018,7 +1018,7 @@ public class InteractiveCpuRayTracer extends JPanel {
         ) {
             movement =
                 movement.add(
-                    new Vec3(
+                    new Vector3(
                         0,
                         1,
                         0
@@ -1033,7 +1033,7 @@ public class InteractiveCpuRayTracer extends JPanel {
         ) {
             movement =
                 movement.sub(
-                    new Vec3(
+                    new Vector3(
                         0,
                         1,
                         0
@@ -1047,7 +1047,7 @@ public class InteractiveCpuRayTracer extends JPanel {
 
             movement =
                 movement
-                    .normalize()
+                    .normalized()
                     .mul(
                         MOVE_SPEED
                             *
@@ -1407,127 +1407,21 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Camera Movement
-    // =========================================================
-
-    record Vec3(
-        double x,
-        double y,
-        double z
-    ) {
-
-        static Vec3 reflect(
-            Vec3 direction,
-            Vec3 normal
-        ) {
-
-            return direction.sub(
-                normal.mul(
-                    2.0 *
-                        direction.dot(normal)
-                )
-            );
-        }
-
-        Vec3 add(Vec3 v) {
-
-            return new Vec3(
-                x + v.x,
-                y + v.y,
-                z + v.z
-            );
-        }
-
-        Vec3 sub(Vec3 v) {
-
-            return new Vec3(
-                x - v.x,
-                y - v.y,
-                z - v.z
-            );
-        }
-
-        Vec3 mul(double s) {
-
-            return new Vec3(
-                x * s,
-                y * s,
-                z * s
-            );
-        }
-
-        Vec3 mul(Vec3 v) {
-
-            return new Vec3(
-                x * v.x,
-                y * v.y,
-                z * v.z
-            );
-        }
-
-        double dot(Vec3 v) {
-
-            return
-                x * v.x +
-                    y * v.y +
-                    z * v.z;
-        }
-
-        Vec3 cross(Vec3 v) {
-
-            return new Vec3(
-                y * v.z - z * v.y,
-                z * v.x - x * v.z,
-                x * v.y - y * v.x
-            );
-        }
-
-        double length() {
-
-            return Math.sqrt(
-                dot(this)
-            );
-        }
-
-        Vec3 normalize() {
-
-            double len = length();
-
-            if (len == 0) {
-                return this;
-            }
-
-            return mul(
-                1.0 / len
-            );
-        }
-
-        Vec3 negate() {
-
-            return new Vec3(
-                -x,
-                -y,
-                -z
-            );
-        }
-    }
-
-    // =========================================================
     // Main Render Loop
     // =========================================================
 
     record Ray(
-        Vec3 origin,
-        Vec3 direction
+        Vector3 origin,
+        Vector3 direction
     ) {
 
         Ray {
 
             direction =
-                direction.normalize();
+                direction.normalized();
         }
 
-        Vec3 at(double t) {
+        Vector3 at(double t) {
 
             return origin.add(
                 direction.mul(t)
@@ -1540,7 +1434,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
 
     record Material(
-        Vec3 color,
+        Vector3 color,
 
         // 0 ~ 1
         double reflectivity,
@@ -1556,8 +1450,8 @@ public class InteractiveCpuRayTracer extends JPanel {
 
     record Hit(
         double distance,
-        Vec3 position,
-        Vec3 normal,
+        Vector3 position,
+        Vector3 normal,
         Material material
     ) {
     }
@@ -1567,7 +1461,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
 
     record Sphere(
-        Vec3 center,
+        Vector3 center,
         double radius,
         Material material
     ) implements SceneObject {
@@ -1577,7 +1471,7 @@ public class InteractiveCpuRayTracer extends JPanel {
             Ray ray
         ) {
 
-            Vec3 oc =
+            Vector3 oc =
                 ray.origin()
                     .sub(center);
 
@@ -1635,13 +1529,13 @@ public class InteractiveCpuRayTracer extends JPanel {
                 }
             }
 
-            Vec3 position =
+            Vector3 position =
                 ray.at(t);
 
-            Vec3 normal =
+            Vector3 normal =
                 position
                     .sub(center)
-                    .normalize();
+                    .normalized();
 
             return new Hit(
                 t,
@@ -1653,8 +1547,8 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     record Plane(
-        Vec3 point,
-        Vec3 normal,
+        Vector3 point,
+        Vector3 normal,
         Material material
     ) implements SceneObject {
 
@@ -1690,12 +1584,12 @@ public class InteractiveCpuRayTracer extends JPanel {
             }
 
             // 确保 normal 朝向 ray
-            Vec3 n =
+            Vector3 n =
                 denominator < 0
                     ?
                     normal
                     :
-                    normal.negate();
+                    normal.negated();
 
             return new Hit(
                 t,
@@ -1711,8 +1605,8 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
 
     record PointLight(
-        Vec3 position,
-        Vec3 color,
+        Vector3 position,
+        Vector3 color,
         double intensity
     ) {
     }
@@ -1765,9 +1659,9 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
 
     record CameraBasis(
-        Vec3 forward,
-        Vec3 right,
-        Vec3 up
+        Vector3 forward,
+        Vector3 right,
+        Vector3 up
     ) {
     }
 }
