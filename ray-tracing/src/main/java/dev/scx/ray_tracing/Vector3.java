@@ -39,6 +39,11 @@ public class Vector3 {
         return Vector3Math.div(this, s);
     }
 
+    /// negated
+    public Vector3 negated() {
+        return Vector3Math.negate(this);
+    }
+
     /// dot
     public double dot(Vector3 v) {
         return Vector3Math.dot(this, v);
@@ -57,11 +62,6 @@ public class Vector3 {
     /// lengthSquared
     public double lengthSquared() {
         return Vector3Math.lengthSquared(this);
-    }
-
-    /// negated
-    public Vector3 negated() {
-        return Vector3Math.negate(this);
     }
 
     /// normalized
