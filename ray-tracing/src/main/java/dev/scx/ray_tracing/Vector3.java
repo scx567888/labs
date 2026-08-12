@@ -2,6 +2,7 @@ package dev.scx.ray_tracing;
 
 import java.util.Objects;
 
+/// Vector3
 public class Vector3 {
 
     public double x;
