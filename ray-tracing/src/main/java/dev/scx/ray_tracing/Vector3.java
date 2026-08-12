@@ -54,6 +54,11 @@ public class Vector3 {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
+    /// lengthSquared
+    public double lengthSquared() {
+        return x * x + y * y + z * z;
+    }
+
     /// normalized
     public Vector3 normalized() {
         var length = length();
