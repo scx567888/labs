@@ -5,8 +5,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
@@ -32,51 +34,42 @@ public class InteractiveCpuRasterizer extends JPanel {
     // =========================================================
     // Buffers
     // =========================================================
-
-    volatile BufferedImage frontImage = new BufferedImage(
-            RENDER_WIDTH,
-            RENDER_HEIGHT,
-            BufferedImage.TYPE_INT_RGB
-    );
-
-    BufferedImage backImage = new BufferedImage(
-            RENDER_WIDTH,
-            RENDER_HEIGHT,
-            BufferedImage.TYPE_INT_RGB
-    );
-
     final double[] depthBuffer = new double[RENDER_WIDTH * RENDER_HEIGHT];
+    final Set<Integer> keys = ConcurrentHashMap.newKeySet();
+    final List<Triangle> sceneTriangles = new ArrayList<>();
 
     // =========================================================
     // Input / Camera
     // =========================================================
-
-    final Set<Integer> keys = ConcurrentHashMap.newKeySet();
-
+    final PointLight light = new PointLight(
+        new Vec3(-3, 5, 1),
+        new Vec3(1.0, 0.95, 0.85),
+        45.0
+    );
+    volatile BufferedImage frontImage = new BufferedImage(
+        RENDER_WIDTH,
+        RENDER_HEIGHT,
+        BufferedImage.TYPE_INT_RGB
+    );
+    BufferedImage backImage = new BufferedImage(
+        RENDER_WIDTH,
+        RENDER_HEIGHT,
+        BufferedImage.TYPE_INT_RGB
+    );
     volatile Vec3 cameraPosition = new Vec3(0, 0.2, 1.5);
     volatile double yaw = 0.0;
     volatile double pitch = 0.0;
-
     boolean rotating;
-    int lastMouseX;
-    int lastMouseY;
 
     // =========================================================
     // Scene
     // =========================================================
-
-    final List<Triangle> sceneTriangles = new ArrayList<>();
-
-    final PointLight light = new PointLight(
-            new Vec3(-3, 5, 1),
-            new Vec3(1.0, 0.95, 0.85),
-            45.0
-    );
+    int lastMouseX;
+    int lastMouseY;
 
     // =========================================================
     // Performance
     // =========================================================
-
     volatile double fps;
     volatile int visibleTriangles;
     volatile long shadedPixels;
@@ -89,8 +82,8 @@ public class InteractiveCpuRasterizer extends JPanel {
 
     public InteractiveCpuRasterizer() {
         setPreferredSize(new Dimension(
-                RENDER_WIDTH * DISPLAY_SCALE,
-                RENDER_HEIGHT * DISPLAY_SCALE
+            RENDER_WIDTH * DISPLAY_SCALE,
+            RENDER_HEIGHT * DISPLAY_SCALE
         ));
         setFocusable(true);
 
@@ -106,131 +99,75 @@ public class InteractiveCpuRasterizer extends JPanel {
     // Math
     // =========================================================
 
-    record Vec3(double x, double y, double z) {
-
-        Vec3 add(Vec3 v) {
-            return new Vec3(x + v.x, y + v.y, z + v.z);
-        }
-
-        Vec3 sub(Vec3 v) {
-            return new Vec3(x - v.x, y - v.y, z - v.z);
-        }
-
-        Vec3 mul(double s) {
-            return new Vec3(x * s, y * s, z * s);
-        }
-
-        Vec3 mul(Vec3 v) {
-            return new Vec3(x * v.x, y * v.y, z * v.z);
-        }
-
-        double dot(Vec3 v) {
-            return x * v.x + y * v.y + z * v.z;
-        }
-
-        Vec3 cross(Vec3 v) {
-            return new Vec3(
-                    y * v.z - z * v.y,
-                    z * v.x - x * v.z,
-                    x * v.y - y * v.x
-            );
-        }
-
-        double length() {
-            return Math.sqrt(dot(this));
-        }
-
-        Vec3 normalize() {
-            double len = length();
-            if (len == 0) return this;
-            return mul(1.0 / len);
-        }
-
-        Vec3 negate() {
-            return new Vec3(-x, -y, -z);
-        }
+    static double edge(
+        double ax,
+        double ay,
+        double bx,
+        double by,
+        double px,
+        double py
+    ) {
+        return (px - ax) * (by - ay) - (py - ay) * (bx - ax);
     }
 
-    record CameraBasis(Vec3 forward, Vec3 right, Vec3 up) {}
-
-    record Material(Vec3 color, double specular) {}
-
-    record Vertex(Vec3 position, Vec3 normal) {}
-
-    record Triangle(Vertex a, Vertex b, Vertex c, Material material) {}
-
-    record PointLight(Vec3 position, Vec3 color, double intensity) {}
-
-    // Projected vertex keeps values divided by Z so we can do
-    // perspective-correct interpolation later.
-    record ProjectedVertex(
-            double x,
-            double y,
-            double invZ,
-            Vec3 worldOverZ,
-            Vec3 normalOverZ
-    ) {}
-
-    static class ProjectedTriangle {
-        final ProjectedVertex a;
-        final ProjectedVertex b;
-        final ProjectedVertex c;
-        final Material material;
-
-        final int minX;
-        final int maxX;
-        final int minY;
-        final int maxY;
-
-        final double area;
-
-        ProjectedTriangle(
-                ProjectedVertex a,
-                ProjectedVertex b,
-                ProjectedVertex c,
-                Material material,
-                int minX,
-                int maxX,
-                int minY,
-                int maxY,
-                double area
-        ) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.material = material;
-            this.minX = minX;
-            this.maxX = maxX;
-            this.minY = minY;
-            this.maxY = maxY;
-            this.area = area;
-        }
+    static Vec3 gammaCorrect(Vec3 c) {
+        return new Vec3(
+            Math.sqrt(Math.max(0, c.x())),
+            Math.sqrt(Math.max(0, c.y())),
+            Math.sqrt(Math.max(0, c.z()))
+        );
     }
 
-    // =========================================================
-    // Scene Creation
-    // =========================================================
+    static int toRGB(Vec3 c) {
+        int r = (int) (clamp(c.x()) * 255);
+        int g = (int) (clamp(c.y()) * 255);
+        int b = (int) (clamp(c.z()) * 255);
+        return (r << 16) | (g << 8) | b;
+    }
+
+    static double clamp(double v) {
+        return Math.max(0, Math.min(1, v));
+    }
+
+    static int clampInt(int v, int min, int max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Pure CPU Interactive Rasterizer");
+            InteractiveCpuRasterizer panel = new InteractiveCpuRasterizer();
+
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setContentPane(panel);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+
+            panel.requestFocusInWindow();
+        });
+    }
 
     void createScene() {
 
         Material red = new Material(
-                new Vec3(0.85, 0.12, 0.08),
-                0.8
+            new Vec3(0.85, 0.12, 0.08),
+            0.8
         );
 
         Material blue = new Material(
-                new Vec3(0.08, 0.25, 0.85),
-                0.5
+            new Vec3(0.08, 0.25, 0.85),
+            0.5
         );
 
         Material silver = new Material(
-                new Vec3(0.75, 0.75, 0.78),
-                1.0
+            new Vec3(0.75, 0.75, 0.78),
+            1.0
         );
 
         Material ground = new Material(
-                new Vec3(0.55, 0.55, 0.55),
-                0.15
+            new Vec3(0.55, 0.55, 0.55),
+            0.15
         );
 
         addSphere(new Vec3(0, 0, -4), 1.0, 20, 40, red);
@@ -241,11 +178,11 @@ public class InteractiveCpuRasterizer extends JPanel {
     }
 
     void addSphere(
-            Vec3 center,
-            double radius,
-            int latitudeSegments,
-            int longitudeSegments,
-            Material material
+        Vec3 center,
+        double radius,
+        int latitudeSegments,
+        int longitudeSegments,
+        Material material
     ) {
         for (int y = 0; y < latitudeSegments; y++) {
             double v0 = (double) y / latitudeSegments;
@@ -272,13 +209,17 @@ public class InteractiveCpuRasterizer extends JPanel {
         }
     }
 
+    // =========================================================
+    // Scene Creation
+    // =========================================================
+
     Vertex sphereVertex(Vec3 center, double radius, double theta, double phi) {
         double sinTheta = Math.sin(theta);
 
         Vec3 normal = new Vec3(
-                sinTheta * Math.cos(phi),
-                Math.cos(theta),
-                sinTheta * Math.sin(phi)
+            sinTheta * Math.cos(phi),
+            Math.cos(theta),
+            sinTheta * Math.sin(phi)
         ).normalize();
 
         Vec3 position = center.add(normal.mul(radius));
@@ -286,10 +227,10 @@ public class InteractiveCpuRasterizer extends JPanel {
     }
 
     void addGroundGrid(
-            double y,
-            int halfCells,
-            double cellSize,
-            Material material
+        double y,
+        int halfCells,
+        double cellSize,
+        Material material
     ) {
         Vec3 n = new Vec3(0, 1, 0);
 
@@ -311,17 +252,13 @@ public class InteractiveCpuRasterizer extends JPanel {
         }
     }
 
-    // =========================================================
-    // Camera
-    // =========================================================
-
     CameraBasis cameraBasis() {
         double cosPitch = Math.cos(pitch);
 
         Vec3 forward = new Vec3(
-                Math.sin(yaw) * cosPitch,
-                Math.sin(pitch),
-                -Math.cos(yaw) * cosPitch
+            Math.sin(yaw) * cosPitch,
+            Math.sin(pitch),
+            -Math.cos(yaw) * cosPitch
         ).normalize();
 
         Vec3 worldUp = new Vec3(0, 1, 0);
@@ -331,14 +268,10 @@ public class InteractiveCpuRasterizer extends JPanel {
         return new CameraBasis(forward, right, up);
     }
 
-    // =========================================================
-    // Projection
-    // =========================================================
-
     ProjectedVertex projectVertex(
-            Vertex vertex,
-            Vec3 camera,
-            CameraBasis basis
+        Vertex vertex,
+        Vec3 camera,
+        CameraBasis basis
     ) {
         Vec3 rel = vertex.position().sub(camera);
 
@@ -362,18 +295,22 @@ public class InteractiveCpuRasterizer extends JPanel {
         double invZ = 1.0 / viewZ;
 
         return new ProjectedVertex(
-                screenX,
-                screenY,
-                invZ,
-                vertex.position().mul(invZ),
-                vertex.normal().mul(invZ)
+            screenX,
+            screenY,
+            invZ,
+            vertex.position().mul(invZ),
+            vertex.normal().mul(invZ)
         );
     }
 
+    // =========================================================
+    // Camera
+    // =========================================================
+
     ProjectedTriangle projectTriangle(
-            Triangle triangle,
-            Vec3 camera,
-            CameraBasis basis
+        Triangle triangle,
+        Vec3 camera,
+        CameraBasis basis
     ) {
         ProjectedVertex a = projectVertex(triangle.a(), camera, basis);
         ProjectedVertex b = projectVertex(triangle.b(), camera, basis);
@@ -392,27 +329,27 @@ public class InteractiveCpuRasterizer extends JPanel {
         }
 
         int minX = clampInt(
-                (int) Math.floor(Math.min(a.x(), Math.min(b.x(), c.x()))),
-                0,
-                RENDER_WIDTH - 1
+            (int) Math.floor(Math.min(a.x(), Math.min(b.x(), c.x()))),
+            0,
+            RENDER_WIDTH - 1
         );
 
         int maxX = clampInt(
-                (int) Math.ceil(Math.max(a.x(), Math.max(b.x(), c.x()))),
-                0,
-                RENDER_WIDTH - 1
+            (int) Math.ceil(Math.max(a.x(), Math.max(b.x(), c.x()))),
+            0,
+            RENDER_WIDTH - 1
         );
 
         int minY = clampInt(
-                (int) Math.floor(Math.min(a.y(), Math.min(b.y(), c.y()))),
-                0,
-                RENDER_HEIGHT - 1
+            (int) Math.floor(Math.min(a.y(), Math.min(b.y(), c.y()))),
+            0,
+            RENDER_HEIGHT - 1
         );
 
         int maxY = clampInt(
-                (int) Math.ceil(Math.max(a.y(), Math.max(b.y(), c.y()))),
-                0,
-                RENDER_HEIGHT - 1
+            (int) Math.ceil(Math.max(a.y(), Math.max(b.y(), c.y()))),
+            0,
+            RENDER_HEIGHT - 1
         );
 
         if (maxX < 0 || maxY < 0 || minX >= RENDER_WIDTH || minY >= RENDER_HEIGHT) {
@@ -424,41 +361,30 @@ public class InteractiveCpuRasterizer extends JPanel {
         }
 
         return new ProjectedTriangle(
-                a,
-                b,
-                c,
-                triangle.material(),
-                minX,
-                maxX,
-                minY,
-                maxY,
-                area
+            a,
+            b,
+            c,
+            triangle.material(),
+            minX,
+            maxX,
+            minY,
+            maxY,
+            area
         );
     }
 
     // =========================================================
-    // Rasterization
+    // Projection
     // =========================================================
 
-    static double edge(
-            double ax,
-            double ay,
-            double bx,
-            double by,
-            double px,
-            double py
-    ) {
-        return (px - ax) * (by - ay) - (py - ay) * (bx - ax);
-    }
-
     void rasterizeTriangle(
-            ProjectedTriangle t,
-            int clipMinX,
-            int clipMaxX,
-            int clipMinY,
-            int clipMaxY,
-            int[] pixels,
-            long[] localCounter
+        ProjectedTriangle t,
+        int clipMinX,
+        int clipMaxX,
+        int clipMinY,
+        int clipMaxY,
+        int[] pixels,
+        long[] localCounter
     ) {
         int minX = Math.max(t.minX, clipMinX);
         int maxX = Math.min(t.maxX, clipMaxX);
@@ -478,27 +404,31 @@ public class InteractiveCpuRasterizer extends JPanel {
                 double px = x + 0.5;
 
                 double w0 = edge(
-                        t.b.x(), t.b.y(),
-                        t.c.x(), t.c.y(),
-                        px, py
+                    t.b.x(), t.b.y(),
+                    t.c.x(), t.c.y(),
+                    px, py
                 );
 
                 double w1 = edge(
-                        t.c.x(), t.c.y(),
-                        t.a.x(), t.a.y(),
-                        px, py
+                    t.c.x(), t.c.y(),
+                    t.a.x(), t.a.y(),
+                    px, py
                 );
 
                 double w2 = edge(
-                        t.a.x(), t.a.y(),
-                        t.b.x(), t.b.y(),
-                        px, py
+                    t.a.x(), t.a.y(),
+                    t.b.x(), t.b.y(),
+                    px, py
                 );
 
                 if (positiveArea) {
-                    if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+                    if (w0 < 0 || w1 < 0 || w2 < 0) {
+                        continue;
+                    }
                 } else {
-                    if (w0 > 0 || w1 > 0 || w2 > 0) continue;
+                    if (w0 > 0 || w1 > 0 || w2 > 0) {
+                        continue;
+                    }
                 }
 
                 // Screen-space barycentric coordinates.
@@ -508,11 +438,13 @@ public class InteractiveCpuRasterizer extends JPanel {
 
                 // Perspective-correct interpolation.
                 double invZ =
-                        l0 * t.a.invZ()
+                    l0 * t.a.invZ()
                         + l1 * t.b.invZ()
                         + l2 * t.c.invZ();
 
-                if (invZ <= 0) continue;
+                if (invZ <= 0) {
+                    continue;
+                }
 
                 double viewZ = 1.0 / invZ;
                 int index = y * RENDER_WIDTH + x;
@@ -522,12 +454,12 @@ public class InteractiveCpuRasterizer extends JPanel {
                 }
 
                 Vec3 worldOverZ =
-                        t.a.worldOverZ().mul(l0)
+                    t.a.worldOverZ().mul(l0)
                         .add(t.b.worldOverZ().mul(l1))
                         .add(t.c.worldOverZ().mul(l2));
 
                 Vec3 normalOverZ =
-                        t.a.normalOverZ().mul(l0)
+                    t.a.normalOverZ().mul(l0)
                         .add(t.b.normalOverZ().mul(l1))
                         .add(t.c.normalOverZ().mul(l2));
 
@@ -543,14 +475,10 @@ public class InteractiveCpuRasterizer extends JPanel {
         }
     }
 
-    // =========================================================
-    // Lighting
-    // =========================================================
-
     Vec3 shade(
-            Vec3 worldPosition,
-            Vec3 normal,
-            Material material
+        Vec3 worldPosition,
+        Vec3 normal,
+        Material material
     ) {
         Vec3 result = material.color().mul(0.04);
 
@@ -559,43 +487,43 @@ public class InteractiveCpuRasterizer extends JPanel {
         Vec3 lightDirection = toLight.mul(1.0 / lightDistance);
 
         double attenuation = light.intensity() /
-                (lightDistance * lightDistance);
+            (lightDistance * lightDistance);
 
         double diffuse = Math.max(0, normal.dot(lightDirection));
 
         result = result.add(
-                material.color()
-                        .mul(light.color())
-                        .mul(diffuse * attenuation)
+            material.color()
+                .mul(light.color())
+                .mul(diffuse * attenuation)
         );
 
         Vec3 viewDirection = cameraPosition.sub(worldPosition).normalize();
         Vec3 halfVector = lightDirection.add(viewDirection).normalize();
 
         double specular = Math.pow(
-                Math.max(0, normal.dot(halfVector)),
-                64
+            Math.max(0, normal.dot(halfVector)),
+            64
         );
 
         result = result.add(
-                light.color().mul(
-                        specular
-                        * material.specular()
-                        * attenuation
-                )
+            light.color().mul(
+                specular
+                    * material.specular()
+                    * attenuation
+            )
         );
 
         return result;
     }
 
     // =========================================================
-    // Frame Rendering
+    // Rasterization
     // =========================================================
 
     @SuppressWarnings("unchecked")
     void renderFrame() {
         int[] pixels = ((DataBufferInt)
-                backImage.getRaster().getDataBuffer()
+            backImage.getRaster().getDataBuffer()
         ).getData();
 
         Arrays.fill(pixels, 0x7FA8E8);
@@ -657,13 +585,13 @@ public class InteractiveCpuRasterizer extends JPanel {
 
             for (ProjectedTriangle t : bins[tileIndex]) {
                 rasterizeTriangle(
-                        t,
-                        minX,
-                        maxX,
-                        minY,
-                        maxY,
-                        pixels,
-                        localCounter
+                    t,
+                    minX,
+                    maxX,
+                    minY,
+                    maxY,
+                    pixels,
+                    localCounter
                 );
             }
 
@@ -671,7 +599,9 @@ public class InteractiveCpuRasterizer extends JPanel {
         });
 
         long sum = 0;
-        for (long c : counters) sum += c;
+        for (long c : counters) {
+            sum += c;
+        }
         shadedPixels = sum;
 
         BufferedImage temp = frontImage;
@@ -679,30 +609,38 @@ public class InteractiveCpuRasterizer extends JPanel {
         backImage = temp;
     }
 
-    // =========================================================
-    // Camera Movement
-    // =========================================================
-
     void updateCamera(double deltaTime) {
         CameraBasis basis = cameraBasis();
         Vec3 movement = new Vec3(0, 0, 0);
 
-        if (keys.contains(KeyEvent.VK_W)) movement = movement.add(basis.forward());
-        if (keys.contains(KeyEvent.VK_S)) movement = movement.sub(basis.forward());
-        if (keys.contains(KeyEvent.VK_D)) movement = movement.add(basis.right());
-        if (keys.contains(KeyEvent.VK_A)) movement = movement.sub(basis.right());
-        if (keys.contains(KeyEvent.VK_SPACE)) movement = movement.add(new Vec3(0, 1, 0));
-        if (keys.contains(KeyEvent.VK_SHIFT)) movement = movement.sub(new Vec3(0, 1, 0));
+        if (keys.contains(KeyEvent.VK_W)) {
+            movement = movement.add(basis.forward());
+        }
+        if (keys.contains(KeyEvent.VK_S)) {
+            movement = movement.sub(basis.forward());
+        }
+        if (keys.contains(KeyEvent.VK_D)) {
+            movement = movement.add(basis.right());
+        }
+        if (keys.contains(KeyEvent.VK_A)) {
+            movement = movement.sub(basis.right());
+        }
+        if (keys.contains(KeyEvent.VK_SPACE)) {
+            movement = movement.add(new Vec3(0, 1, 0));
+        }
+        if (keys.contains(KeyEvent.VK_SHIFT)) {
+            movement = movement.sub(new Vec3(0, 1, 0));
+        }
 
         if (movement.length() > 0) {
             cameraPosition = cameraPosition.add(
-                    movement.normalize().mul(MOVE_SPEED * deltaTime)
+                movement.normalize().mul(MOVE_SPEED * deltaTime)
             );
         }
     }
 
     // =========================================================
-    // Loop
+    // Lighting
     // =========================================================
 
     void renderLoop() {
@@ -724,8 +662,11 @@ public class InteractiveCpuRasterizer extends JPanel {
             double seconds = (end - start) / 1_000_000_000.0;
             double currentFps = 1.0 / Math.max(seconds, 1e-9);
 
-            if (smoothFps == 0) smoothFps = currentFps;
-            else smoothFps = smoothFps * 0.9 + currentFps * 0.1;
+            if (smoothFps == 0) {
+                smoothFps = currentFps;
+            } else {
+                smoothFps = smoothFps * 0.9 + currentFps * 0.1;
+            }
 
             fps = smoothFps;
             repaint();
@@ -733,7 +674,7 @@ public class InteractiveCpuRasterizer extends JPanel {
     }
 
     // =========================================================
-    // Input
+    // Frame Rendering
     // =========================================================
 
     void installInput() {
@@ -772,7 +713,9 @@ public class InteractiveCpuRasterizer extends JPanel {
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (!rotating) return;
+                if (!rotating) {
+                    return;
+                }
 
                 int dx = e.getX() - lastMouseX;
                 int dy = e.getY() - lastMouseY;
@@ -789,34 +732,7 @@ public class InteractiveCpuRasterizer extends JPanel {
     }
 
     // =========================================================
-    // Color
-    // =========================================================
-
-    static Vec3 gammaCorrect(Vec3 c) {
-        return new Vec3(
-                Math.sqrt(Math.max(0, c.x())),
-                Math.sqrt(Math.max(0, c.y())),
-                Math.sqrt(Math.max(0, c.z()))
-        );
-    }
-
-    static int toRGB(Vec3 c) {
-        int r = (int) (clamp(c.x()) * 255);
-        int g = (int) (clamp(c.y()) * 255);
-        int b = (int) (clamp(c.z()) * 255);
-        return (r << 16) | (g << 8) | b;
-    }
-
-    static double clamp(double v) {
-        return Math.max(0, Math.min(1, v));
-    }
-
-    static int clampInt(int v, int min, int max) {
-        return Math.max(min, Math.min(max, v));
-    }
-
-    // =========================================================
-    // Swing
+    // Camera Movement
     // =========================================================
 
     @Override
@@ -824,12 +740,12 @@ public class InteractiveCpuRasterizer extends JPanel {
         super.paintComponent(g);
 
         g.drawImage(
-                frontImage,
-                0,
-                0,
-                getWidth(),
-                getHeight(),
-                null
+            frontImage,
+            0,
+            0,
+            getWidth(),
+            getHeight(),
+            null
         );
 
         g.setColor(new Color(0, 0, 0, 165));
@@ -845,6 +761,10 @@ public class InteractiveCpuRasterizer extends JPanel {
         g.drawString("WASD | Space/Shift | Hold RMB + drag", 20, 112);
     }
 
+    // =========================================================
+    // Loop
+    // =========================================================
+
     @Override
     public void removeNotify() {
         running = false;
@@ -852,21 +772,121 @@ public class InteractiveCpuRasterizer extends JPanel {
     }
 
     // =========================================================
+    // Input
+    // =========================================================
+
+    record Vec3(double x, double y, double z) {
+
+        Vec3 add(Vec3 v) {
+            return new Vec3(x + v.x, y + v.y, z + v.z);
+        }
+
+        Vec3 sub(Vec3 v) {
+            return new Vec3(x - v.x, y - v.y, z - v.z);
+        }
+
+        Vec3 mul(double s) {
+            return new Vec3(x * s, y * s, z * s);
+        }
+
+        Vec3 mul(Vec3 v) {
+            return new Vec3(x * v.x, y * v.y, z * v.z);
+        }
+
+        double dot(Vec3 v) {
+            return x * v.x + y * v.y + z * v.z;
+        }
+
+        Vec3 cross(Vec3 v) {
+            return new Vec3(
+                y * v.z - z * v.y,
+                z * v.x - x * v.z,
+                x * v.y - y * v.x
+            );
+        }
+
+        double length() {
+            return Math.sqrt(dot(this));
+        }
+
+        Vec3 normalize() {
+            double len = length();
+            if (len == 0) {
+                return this;
+            }
+            return mul(1.0 / len);
+        }
+
+        Vec3 negate() {
+            return new Vec3(-x, -y, -z);
+        }
+    }
+
+    // =========================================================
+    // Color
+    // =========================================================
+
+    record CameraBasis(Vec3 forward, Vec3 right, Vec3 up) {}
+
+    record Material(Vec3 color, double specular) {}
+
+    record Vertex(Vec3 position, Vec3 normal) {}
+
+    record Triangle(Vertex a, Vertex b, Vertex c, Material material) {}
+
+    // =========================================================
+    // Swing
+    // =========================================================
+
+    record PointLight(Vec3 position, Vec3 color, double intensity) {}
+
+    // Projected vertex keeps values divided by Z so we can do
+    // perspective-correct interpolation later.
+    record ProjectedVertex(
+        double x,
+        double y,
+        double invZ,
+        Vec3 worldOverZ,
+        Vec3 normalOverZ
+    ) {}
+
+    // =========================================================
     // Main
     // =========================================================
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Pure CPU Interactive Rasterizer");
-            InteractiveCpuRasterizer panel = new InteractiveCpuRasterizer();
+    static class ProjectedTriangle {
+        final ProjectedVertex a;
+        final ProjectedVertex b;
+        final ProjectedVertex c;
+        final Material material;
 
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setContentPane(panel);
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
+        final int minX;
+        final int maxX;
+        final int minY;
+        final int maxY;
 
-            panel.requestFocusInWindow();
-        });
+        final double area;
+
+        ProjectedTriangle(
+            ProjectedVertex a,
+            ProjectedVertex b,
+            ProjectedVertex c,
+            Material material,
+            int minX,
+            int maxX,
+            int minY,
+            int maxY,
+            double area
+        ) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.material = material;
+            this.minX = minX;
+            this.maxX = maxX;
+            this.minY = minY;
+            this.maxY = maxY;
+            this.area = area;
+        }
     }
 }

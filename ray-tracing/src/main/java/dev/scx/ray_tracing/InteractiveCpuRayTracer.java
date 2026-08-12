@@ -41,7 +41,13 @@ public class InteractiveCpuRayTracer extends JPanel {
     // =========================================================
     // Frame Buffer
     // =========================================================
+    final Scene scene = new Scene();
+    final Set<Integer> keys =
+        ConcurrentHashMap.newKeySet();
 
+    // =========================================================
+    // Scene
+    // =========================================================
     volatile BufferedImage frontImage =
         new BufferedImage(
             RENDER_WIDTH,
@@ -49,6 +55,9 @@ public class InteractiveCpuRayTracer extends JPanel {
             BufferedImage.TYPE_INT_RGB
         );
 
+    // =========================================================
+    // Input
+    // =========================================================
     BufferedImage backImage =
         new BufferedImage(
             RENDER_WIDTH,
@@ -57,22 +66,8 @@ public class InteractiveCpuRayTracer extends JPanel {
         );
 
     // =========================================================
-    // Scene
-    // =========================================================
-
-    final Scene scene = new Scene();
-
-    // =========================================================
-    // Input
-    // =========================================================
-
-    final Set<Integer> keys =
-        ConcurrentHashMap.newKeySet();
-
-    // =========================================================
     // Camera
     // =========================================================
-
     volatile Vec3 cameraPosition =
         new Vec3(
             0,
@@ -132,373 +127,143 @@ public class InteractiveCpuRayTracer extends JPanel {
     // Vec3
     // =========================================================
 
-    record Vec3(
-        double x,
-        double y,
-        double z
+    static Vec3 gammaCorrect(
+        Vec3 color
     ) {
 
-        Vec3 add(Vec3 v) {
+        return new Vec3(
 
-            return new Vec3(
-                x + v.x,
-                y + v.y,
-                z + v.z
-            );
-        }
-
-        Vec3 sub(Vec3 v) {
-
-            return new Vec3(
-                x - v.x,
-                y - v.y,
-                z - v.z
-            );
-        }
-
-        Vec3 mul(double s) {
-
-            return new Vec3(
-                x * s,
-                y * s,
-                z * s
-            );
-        }
-
-        Vec3 mul(Vec3 v) {
-
-            return new Vec3(
-                x * v.x,
-                y * v.y,
-                z * v.z
-            );
-        }
-
-        double dot(Vec3 v) {
-
-            return
-                x * v.x +
-                    y * v.y +
-                    z * v.z;
-        }
-
-        Vec3 cross(Vec3 v) {
-
-            return new Vec3(
-                y * v.z - z * v.y,
-                z * v.x - x * v.z,
-                x * v.y - y * v.x
-            );
-        }
-
-        double length() {
-
-            return Math.sqrt(
-                dot(this)
-            );
-        }
-
-        Vec3 normalize() {
-
-            double len = length();
-
-            if (len == 0)
-                return this;
-
-            return mul(
-                1.0 / len
-            );
-        }
-
-        Vec3 negate() {
-
-            return new Vec3(
-                -x,
-                -y,
-                -z
-            );
-        }
-
-        static Vec3 reflect(
-            Vec3 direction,
-            Vec3 normal
-        ) {
-
-            return direction.sub(
-                normal.mul(
-                    2.0 *
-                        direction.dot(normal)
+            Math.sqrt(
+                Math.max(
+                    0,
+                    color.x()
                 )
-            );
-        }
+            ),
+
+            Math.sqrt(
+                Math.max(
+                    0,
+                    color.y()
+                )
+            ),
+
+            Math.sqrt(
+                Math.max(
+                    0,
+                    color.z()
+                )
+            )
+        );
     }
 
     // =========================================================
     // Ray
     // =========================================================
 
-    record Ray(
-        Vec3 origin,
-        Vec3 direction
+    static int toRGB(
+        Vec3 color
     ) {
 
-        Ray {
+        int r =
+            (int)
+                (
+                    clamp(
+                        color.x()
+                    )
+                        *
+                        255
+                );
 
-            direction =
-                direction.normalize();
-        }
+        int g =
+            (int)
+                (
+                    clamp(
+                        color.y()
+                    )
+                        *
+                        255
+                );
 
-        Vec3 at(double t) {
+        int b =
+            (int)
+                (
+                    clamp(
+                        color.z()
+                    )
+                        *
+                        255
+                );
 
-            return origin.add(
-                direction.mul(t)
-            );
-        }
+        return
+            (r << 16)
+                |
+                (g << 8)
+                |
+                b;
     }
 
     // =========================================================
     // Material
     // =========================================================
 
-    record Material(
-        Vec3 color,
-
-        // 0 ~ 1
-        double reflectivity,
-
-        // 镜面高光
-        double specular
+    static double clamp(
+        double value
     ) {
+
+        return Math.max(
+            0,
+
+            Math.min(
+                1,
+                value
+            )
+        );
     }
 
     // =========================================================
     // Hit
     // =========================================================
 
-    record Hit(
-        double distance,
-        Vec3 position,
-        Vec3 normal,
-        Material material
+    public static void main(
+        String[] args
     ) {
-    }
 
-    // =========================================================
-    // Scene Object
-    // =========================================================
+        SwingUtilities.invokeLater(
+            () -> {
 
-    interface SceneObject {
+                JFrame frame =
+                    new JFrame(
+                        "Pure CPU Interactive Ray Tracer"
+                    );
 
-        Hit intersect(
-            Ray ray
+                InteractiveCpuRayTracer panel =
+                    new InteractiveCpuRayTracer();
+
+                frame.setDefaultCloseOperation(
+                    JFrame.EXIT_ON_CLOSE
+                );
+
+                frame.setContentPane(
+                    panel
+                );
+
+                frame.pack();
+
+                frame.setLocationRelativeTo(
+                    null
+                );
+
+                frame.setVisible(
+                    true
+                );
+
+                panel.requestFocusInWindow();
+            }
         );
     }
 
     // =========================================================
-    // Sphere
-    // =========================================================
-
-    record Sphere(
-        Vec3 center,
-        double radius,
-        Material material
-    ) implements SceneObject {
-
-        @Override
-        public Hit intersect(
-            Ray ray
-        ) {
-
-            Vec3 oc =
-                ray.origin()
-                    .sub(center);
-
-            double a =
-                ray.direction()
-                    .dot(
-                        ray.direction()
-                    );
-
-            // 因为 b = 2 * ...
-            // 这里直接用 halfB
-            double halfB =
-                oc.dot(
-                    ray.direction()
-                );
-
-            double c =
-                oc.dot(oc)
-                    -
-                    radius * radius;
-
-            double discriminant =
-                halfB * halfB
-                    -
-                    a * c;
-
-            if (discriminant < 0)
-                return null;
-
-            double sqrt =
-                Math.sqrt(
-                    discriminant
-                );
-
-            // 最近交点
-            double t =
-                (
-                    -halfB - sqrt
-                )
-                    /
-                    a;
-
-            if (t <= EPSILON) {
-
-                t =
-                    (
-                        -halfB + sqrt
-                    )
-                        /
-                        a;
-
-                if (t <= EPSILON)
-                    return null;
-            }
-
-            Vec3 position =
-                ray.at(t);
-
-            Vec3 normal =
-                position
-                    .sub(center)
-                    .normalize();
-
-            return new Hit(
-                t,
-                position,
-                normal,
-                material
-            );
-        }
-    }
-
-    // =========================================================
-    // Plane
-    // =========================================================
-
-    record Plane(
-        Vec3 point,
-        Vec3 normal,
-        Material material
-    ) implements SceneObject {
-
-        @Override
-        public Hit intersect(
-            Ray ray
-        ) {
-
-            double denominator =
-                normal.dot(
-                    ray.direction()
-                );
-
-            if (
-                Math.abs(
-                    denominator
-                ) < 1e-8
-            ) {
-                return null;
-            }
-
-            double t =
-                point
-                    .sub(
-                        ray.origin()
-                    )
-                    .dot(normal)
-                    /
-                    denominator;
-
-            if (t <= EPSILON)
-                return null;
-
-            // 确保 normal 朝向 ray
-            Vec3 n =
-                denominator < 0
-                    ?
-                    normal
-                    :
-                    normal.negate();
-
-            return new Hit(
-                t,
-                ray.at(t),
-                n,
-                material
-            );
-        }
-    }
-
-    // =========================================================
-    // Light
-    // =========================================================
-
-    record PointLight(
-        Vec3 position,
-        Vec3 color,
-        double intensity
-    ) {
-    }
-
-    // =========================================================
-    // Scene
-    // =========================================================
-
-    static class Scene {
-
-        List<SceneObject> objects;
-
-        PointLight light;
-
-        Hit intersect(
-            Ray ray
-        ) {
-
-            Hit closest = null;
-
-            double closestDistance =
-                Double.POSITIVE_INFINITY;
-
-            for (
-                SceneObject object :
-                objects
-            ) {
-
-                Hit hit =
-                    object.intersect(
-                        ray
-                    );
-
-                if (
-                    hit != null &&
-                        hit.distance()
-                            <
-                            closestDistance
-                ) {
-
-                    closest = hit;
-
-                    closestDistance =
-                        hit.distance();
-                }
-            }
-
-            return closest;
-        }
-    }
-
-    // =========================================================
-    // Scene Setup
+    // Scene Object
     // =========================================================
 
     void createScene() {
@@ -621,7 +386,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Ray Tracing
+    // Sphere
     // =========================================================
 
     Vec3 trace(
@@ -877,7 +642,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Sky
+    // Plane
     // =========================================================
 
     Vec3 sky(
@@ -917,15 +682,8 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Camera
+    // Light
     // =========================================================
-
-    record CameraBasis(
-        Vec3 forward,
-        Vec3 right,
-        Vec3 up
-    ) {
-    }
 
     CameraBasis cameraBasis() {
 
@@ -976,6 +734,10 @@ public class InteractiveCpuRayTracer extends JPanel {
             up
         );
     }
+
+    // =========================================================
+    // Scene
+    // =========================================================
 
     Ray cameraRay(
         double pixelX,
@@ -1056,7 +818,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Render Frame
+    // Scene Setup
     // =========================================================
 
     void renderFrame() {
@@ -1188,7 +950,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Camera Movement
+    // Ray Tracing
     // =========================================================
 
     void updateCamera(
@@ -1301,7 +1063,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Main Render Loop
+    // Sky
     // =========================================================
 
     void renderLoop() {
@@ -1407,7 +1169,7 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
-    // Input
+    // Camera
     // =========================================================
 
     void installInput() {
@@ -1493,8 +1255,9 @@ public class InteractiveCpuRayTracer extends JPanel {
                     MouseEvent e
                 ) {
 
-                    if (!rotating)
+                    if (!rotating) {
                         return;
+                    }
 
                     int deltaX =
                         e.getX()
@@ -1536,103 +1299,6 @@ public class InteractiveCpuRayTracer extends JPanel {
             }
         );
     }
-
-    // =========================================================
-    // Gamma
-    // =========================================================
-
-    static Vec3 gammaCorrect(
-        Vec3 color
-    ) {
-
-        return new Vec3(
-
-            Math.sqrt(
-                Math.max(
-                    0,
-                    color.x()
-                )
-            ),
-
-            Math.sqrt(
-                Math.max(
-                    0,
-                    color.y()
-                )
-            ),
-
-            Math.sqrt(
-                Math.max(
-                    0,
-                    color.z()
-                )
-            )
-        );
-    }
-
-    // =========================================================
-    // RGB
-    // =========================================================
-
-    static int toRGB(
-        Vec3 color
-    ) {
-
-        int r =
-            (int)
-                (
-                    clamp(
-                        color.x()
-                    )
-                        *
-                        255
-                );
-
-        int g =
-            (int)
-                (
-                    clamp(
-                        color.y()
-                    )
-                        *
-                        255
-                );
-
-        int b =
-            (int)
-                (
-                    clamp(
-                        color.z()
-                    )
-                        *
-                        255
-                );
-
-        return
-            (r << 16)
-                |
-                (g << 8)
-                |
-                b;
-    }
-
-    static double clamp(
-        double value
-    ) {
-
-        return Math.max(
-            0,
-
-            Math.min(
-                1,
-                value
-            )
-        );
-    }
-
-    // =========================================================
-    // Swing Draw
-    // =========================================================
 
     @Override
     protected void paintComponent(
@@ -1730,44 +1396,378 @@ public class InteractiveCpuRayTracer extends JPanel {
     }
 
     // =========================================================
+    // Render Frame
+    // =========================================================
+
+    interface SceneObject {
+
+        Hit intersect(
+            Ray ray
+        );
+    }
+
+    // =========================================================
+    // Camera Movement
+    // =========================================================
+
+    record Vec3(
+        double x,
+        double y,
+        double z
+    ) {
+
+        static Vec3 reflect(
+            Vec3 direction,
+            Vec3 normal
+        ) {
+
+            return direction.sub(
+                normal.mul(
+                    2.0 *
+                        direction.dot(normal)
+                )
+            );
+        }
+
+        Vec3 add(Vec3 v) {
+
+            return new Vec3(
+                x + v.x,
+                y + v.y,
+                z + v.z
+            );
+        }
+
+        Vec3 sub(Vec3 v) {
+
+            return new Vec3(
+                x - v.x,
+                y - v.y,
+                z - v.z
+            );
+        }
+
+        Vec3 mul(double s) {
+
+            return new Vec3(
+                x * s,
+                y * s,
+                z * s
+            );
+        }
+
+        Vec3 mul(Vec3 v) {
+
+            return new Vec3(
+                x * v.x,
+                y * v.y,
+                z * v.z
+            );
+        }
+
+        double dot(Vec3 v) {
+
+            return
+                x * v.x +
+                    y * v.y +
+                    z * v.z;
+        }
+
+        Vec3 cross(Vec3 v) {
+
+            return new Vec3(
+                y * v.z - z * v.y,
+                z * v.x - x * v.z,
+                x * v.y - y * v.x
+            );
+        }
+
+        double length() {
+
+            return Math.sqrt(
+                dot(this)
+            );
+        }
+
+        Vec3 normalize() {
+
+            double len = length();
+
+            if (len == 0) {
+                return this;
+            }
+
+            return mul(
+                1.0 / len
+            );
+        }
+
+        Vec3 negate() {
+
+            return new Vec3(
+                -x,
+                -y,
+                -z
+            );
+        }
+    }
+
+    // =========================================================
+    // Main Render Loop
+    // =========================================================
+
+    record Ray(
+        Vec3 origin,
+        Vec3 direction
+    ) {
+
+        Ray {
+
+            direction =
+                direction.normalize();
+        }
+
+        Vec3 at(double t) {
+
+            return origin.add(
+                direction.mul(t)
+            );
+        }
+    }
+
+    // =========================================================
+    // Input
+    // =========================================================
+
+    record Material(
+        Vec3 color,
+
+        // 0 ~ 1
+        double reflectivity,
+
+        // 镜面高光
+        double specular
+    ) {
+    }
+
+    // =========================================================
+    // Gamma
+    // =========================================================
+
+    record Hit(
+        double distance,
+        Vec3 position,
+        Vec3 normal,
+        Material material
+    ) {
+    }
+
+    // =========================================================
+    // RGB
+    // =========================================================
+
+    record Sphere(
+        Vec3 center,
+        double radius,
+        Material material
+    ) implements SceneObject {
+
+        @Override
+        public Hit intersect(
+            Ray ray
+        ) {
+
+            Vec3 oc =
+                ray.origin()
+                    .sub(center);
+
+            double a =
+                ray.direction()
+                    .dot(
+                        ray.direction()
+                    );
+
+            // 因为 b = 2 * ...
+            // 这里直接用 halfB
+            double halfB =
+                oc.dot(
+                    ray.direction()
+                );
+
+            double c =
+                oc.dot(oc)
+                    -
+                    radius * radius;
+
+            double discriminant =
+                halfB * halfB
+                    -
+                    a * c;
+
+            if (discriminant < 0) {
+                return null;
+            }
+
+            double sqrt =
+                Math.sqrt(
+                    discriminant
+                );
+
+            // 最近交点
+            double t =
+                (
+                    -halfB - sqrt
+                )
+                    /
+                    a;
+
+            if (t <= EPSILON) {
+
+                t =
+                    (
+                        -halfB + sqrt
+                    )
+                        /
+                        a;
+
+                if (t <= EPSILON) {
+                    return null;
+                }
+            }
+
+            Vec3 position =
+                ray.at(t);
+
+            Vec3 normal =
+                position
+                    .sub(center)
+                    .normalize();
+
+            return new Hit(
+                t,
+                position,
+                normal,
+                material
+            );
+        }
+    }
+
+    record Plane(
+        Vec3 point,
+        Vec3 normal,
+        Material material
+    ) implements SceneObject {
+
+        @Override
+        public Hit intersect(
+            Ray ray
+        ) {
+
+            double denominator =
+                normal.dot(
+                    ray.direction()
+                );
+
+            if (
+                Math.abs(
+                    denominator
+                ) < 1e-8
+            ) {
+                return null;
+            }
+
+            double t =
+                point
+                    .sub(
+                        ray.origin()
+                    )
+                    .dot(normal)
+                    /
+                    denominator;
+
+            if (t <= EPSILON) {
+                return null;
+            }
+
+            // 确保 normal 朝向 ray
+            Vec3 n =
+                denominator < 0
+                    ?
+                    normal
+                    :
+                    normal.negate();
+
+            return new Hit(
+                t,
+                ray.at(t),
+                n,
+                material
+            );
+        }
+    }
+
+    // =========================================================
+    // Swing Draw
+    // =========================================================
+
+    record PointLight(
+        Vec3 position,
+        Vec3 color,
+        double intensity
+    ) {
+    }
+
+    static class Scene {
+
+        List<SceneObject> objects;
+
+        PointLight light;
+
+        Hit intersect(
+            Ray ray
+        ) {
+
+            Hit closest = null;
+
+            double closestDistance =
+                Double.POSITIVE_INFINITY;
+
+            for (
+                SceneObject object :
+                objects
+            ) {
+
+                Hit hit =
+                    object.intersect(
+                        ray
+                    );
+
+                if (
+                    hit != null &&
+                        hit.distance()
+                            <
+                            closestDistance
+                ) {
+
+                    closest = hit;
+
+                    closestDistance =
+                        hit.distance();
+                }
+            }
+
+            return closest;
+        }
+    }
+
+    // =========================================================
     // Main
     // =========================================================
 
-    public static void main(
-        String[] args
+    record CameraBasis(
+        Vec3 forward,
+        Vec3 right,
+        Vec3 up
     ) {
-
-        SwingUtilities.invokeLater(
-            () -> {
-
-                JFrame frame =
-                    new JFrame(
-                        "Pure CPU Interactive Ray Tracer"
-                    );
-
-                InteractiveCpuRayTracer panel =
-                    new InteractiveCpuRayTracer();
-
-                frame.setDefaultCloseOperation(
-                    JFrame.EXIT_ON_CLOSE
-                );
-
-                frame.setContentPane(
-                    panel
-                );
-
-                frame.pack();
-
-                frame.setLocationRelativeTo(
-                    null
-                );
-
-                frame.setVisible(
-                    true
-                );
-
-                panel.requestFocusInWindow();
-            }
-        );
     }
 }
