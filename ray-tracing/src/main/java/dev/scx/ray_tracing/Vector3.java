@@ -20,21 +20,28 @@ public class Vector3 {
     }
 
     /// plus
-    public Vector3 plus(Vector3 vector3) {
-        return new Vector3(
-            x + vector3.x,
-            y + vector3.y,
-            z + vector3.z
-        );
+    public Vector3 plus(Vector3 v3) {
+        return new Vector3(x + v3.x, y + v3.y, z + v3.z);
     }
 
     /// minus
-    public Vector3 minus(Vector3 vector3) {
-        return new Vector3(
-            x - vector3.x,
-            y - vector3.y,
-            z - vector3.z
-        );
+    public Vector3 minus(Vector3 v3) {
+        return new Vector3(x - v3.x, y - v3.y, z - v3.z);
+    }
+
+    /// dot
+    public double dot(Vector3 v3) {
+        return x * v3.x + y * v3.y + z * v3.z;
+    }
+
+    /// cross
+    public Vector3 cross(Vector3 v3) {
+        return new Vector3(y * v3.z - z * v3.y, z * v3.x - x * v3.z, x * v3.y - y * v3.x);
+    }
+
+    /// length
+    public double length() {
+        return Math.sqrt(x * x + y * y + z * z);
     }
 
     // ************************** 重写方法 **************************
