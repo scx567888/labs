@@ -53,6 +53,11 @@ public class Vector3 {
         return new Vector3(x / length, y / length, z / length);
     }
 
+    /// negated
+    public Vector3 negated() {
+        return new Vector3(-x, -y, -z);
+    }
+
     // ************************** 重写方法 **************************
 
     @Override
