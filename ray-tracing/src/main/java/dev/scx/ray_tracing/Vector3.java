@@ -21,32 +21,32 @@ public class Vector3 {
 
     /// add
     public Vector3 add(Vector3 v) {
-        return Vector3Math.add(this,v);
+        return Vector3Math.add(this, v);
     }
 
     /// sub
     public Vector3 sub(Vector3 v) {
-        return Vector3Math.sub(this,v);
+        return Vector3Math.sub(this, v);
     }
 
     /// mul
     public Vector3 mul(double s) {
-        return Vector3Math.mul(this,s);
+        return Vector3Math.mul(this, s);
     }
 
     /// div
     public Vector3 div(double s) {
-        return Vector3Math.div(this,s);
+        return Vector3Math.div(this, s);
     }
 
     /// dot
     public double dot(Vector3 v) {
-        return Vector3Math.dot(this,v);
+        return Vector3Math.dot(this, v);
     }
 
     /// cross
     public Vector3 cross(Vector3 v) {
-        return Vector3Math.cross(this,v);
+        return Vector3Math.cross(this, v);
     }
 
     /// length
