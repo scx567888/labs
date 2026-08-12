@@ -21,56 +21,52 @@ public class Vector3 {
 
     /// add
     public Vector3 add(Vector3 v) {
-        return new Vector3(x + v.x, y + v.y, z + v.z);
+        return Vector3Math.add(this,v);
     }
 
     /// sub
     public Vector3 sub(Vector3 v) {
-        return new Vector3(x - v.x, y - v.y, z - v.z);
+        return Vector3Math.sub(this,v);
     }
 
     /// mul
     public Vector3 mul(double s) {
-        return new Vector3(x * s, y * s, z * s);
+        return Vector3Math.mul(this,s);
     }
 
     /// div
     public Vector3 div(double s) {
-        return new Vector3(x / s, y / s, z / s);
+        return Vector3Math.div(this,s);
     }
 
     /// dot
     public double dot(Vector3 v) {
-        return x * v.x + y * v.y + z * v.z;
+        return Vector3Math.dot(this,v);
     }
 
     /// cross
     public Vector3 cross(Vector3 v) {
-        return new Vector3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+        return Vector3Math.cross(this,v);
     }
 
     /// length
     public double length() {
-        return Math.sqrt(x * x + y * y + z * z);
+        return Vector3Math.length(this);
     }
 
     /// lengthSquared
     public double lengthSquared() {
-        return x * x + y * y + z * z;
-    }
-
-    /// normalized
-    public Vector3 normalized() {
-        var length = length();
-        if (length == 0) {
-            return new Vector3(0, 0, 0);
-        }
-        return new Vector3(x / length, y / length, z / length);
+        return Vector3Math.lengthSquared(this);
     }
 
     /// negated
     public Vector3 negated() {
-        return new Vector3(-x, -y, -z);
+        return Vector3Math.negate(this);
+    }
+
+    /// normalized
+    public Vector3 normalized() {
+        return Vector3Math.normalize(this);
     }
 
     // ************************** 重写方法 **************************
