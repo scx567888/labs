@@ -1,5 +1,7 @@
 package dev.scx.ray_tracing;
 
+/// Vector3 数学运算类.
+/// 所有方法均不会修改传入的 Vector3; 返回 Vector3 时会创建新的实例.
 public final class Vector3Math {
 
     // ****************** 基础算数 ******************
