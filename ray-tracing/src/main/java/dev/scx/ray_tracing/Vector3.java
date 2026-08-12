@@ -19,6 +19,26 @@ public class Vector3 {
         return new Vector3(x, y, z);
     }
 
+    /// plus
+    public Vector3 plus(Vector3 vector3) {
+        return new Vector3(
+            x + vector3.x,
+            y + vector3.y,
+            z + vector3.z
+        );
+    }
+
+    /// minus
+    public Vector3 minus(Vector3 vector3) {
+        return new Vector3(
+            x - vector3.x,
+            y - vector3.y,
+            z - vector3.z
+        );
+    }
+
+    // ************************** 重写方法 **************************
+
     @Override
     public boolean equals(Object object) {
         if (!(object instanceof Vector3 vector3)) {
