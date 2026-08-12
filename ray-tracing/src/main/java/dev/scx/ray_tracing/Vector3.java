@@ -44,6 +44,15 @@ public class Vector3 {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
+    /// normalized
+    public Vector3 normalized() {
+        var length = length();
+        if (length == 0) {
+            return new Vector3(0, 0, 0);
+        }
+        return new Vector3(x / length, y / length, z / length);
+    }
+
     // ************************** 重写方法 **************************
 
     @Override
