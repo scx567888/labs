@@ -19,9 +19,9 @@ public final class FibonacciDemo {
         }
 
         return call(
-                () -> fibonacci(n - 1),
-                ignoredFirst -> fibonacci(n - 2),
-                Long::sum
+            () -> fibonacci(n - 1),
+            ignoredFirst -> fibonacci(n - 2),
+            Long::sum
         );
     }
 }

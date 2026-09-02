@@ -13,13 +13,13 @@ import dev.scx.function.Function1;
  * @param <X> 计算可能抛出的异常类型
  */
 public sealed interface StackCall<T, X extends Throwable>
-        permits StackCall.Done, StackCall.Call, StackCall.Then {
+    permits StackCall.Done, StackCall.Call, StackCall.Then {
 
     /**
      * 当前计算完成后，对结果做普通、立即的转换。
      */
     default <R> StackCall<R, X> map(
-            Function1<? super T, ? extends R, X> mapper
+        Function1<? super T, ? extends R, X> mapper
     ) {
         return then(value -> StackCalls.done(mapper.apply(value)));
     }
@@ -28,7 +28,7 @@ public sealed interface StackCall<T, X extends Throwable>
      * 当前计算完成后，继续另一段 StackCall 计算。
      */
     default <R> StackCall<R, X> then(
-            Function1<? super T, ? extends StackCall<R, X>, X> continuation
+        Function1<? super T, ? extends StackCall<R, X>, X> continuation
     ) {
         return new Then<>(this, continuation);
     }
@@ -40,21 +40,27 @@ public sealed interface StackCall<T, X extends Throwable>
         return StackCalls.run(this);
     }
 
-    /** 当前计算已经得到结果。 */
+    /**
+     * 当前计算已经得到结果。
+     */
     record Done<T, X extends Throwable>(T value)
-            implements StackCall<T, X> {
+        implements StackCall<T, X> {
     }
 
-    /** 延迟产生下一段计算，防止此处立即增加 JVM 调用栈。 */
+    /**
+     * 延迟产生下一段计算，防止此处立即增加 JVM 调用栈。
+     */
     record Call<T, X extends Throwable>(
-            Function0<? extends StackCall<T, X>, X> invocation
+        Function0<? extends StackCall<T, X>, X> invocation
     ) implements StackCall<T, X> {
     }
 
-    /** 先执行 source，再把结果交给 continuation。 */
+    /**
+     * 先执行 source，再把结果交给 continuation。
+     */
     record Then<A, T, X extends Throwable>(
-            StackCall<A, X> source,
-            Function1<? super A, ? extends StackCall<T, X>, X> continuation
+        StackCall<A, X> source,
+        Function1<? super A, ? extends StackCall<T, X>, X> continuation
     ) implements StackCall<T, X> {
     }
 }

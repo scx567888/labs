@@ -5,7 +5,6 @@ import dev.scx.stackcall.StackCall;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import static dev.scx.stackcall.StackCalls.call;
 import static dev.scx.stackcall.StackCalls.done;
@@ -30,12 +29,12 @@ public final class SumDemo {
     }
 
     static void main() throws IOException {
-        walk(new File("xxxx"),(c)->{
+        walk(new File("xxxx"), (c) -> {
             System.out.println(c);
             return false;
         });
         long size = size(new File("xxx"));
-        System.out.println(size/1024/1024+"MB");
+        System.out.println(size / 1024 / 1024 + "MB");
     }
 
     static void walk(File file, Function1<File, Boolean, RuntimeException> visitor) throws IOException {

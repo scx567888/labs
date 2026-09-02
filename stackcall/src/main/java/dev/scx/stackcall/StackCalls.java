@@ -1,17 +1,13 @@
 package dev.scx.stackcall;
 
-import dev.scx.function.Function0;
-import dev.scx.function.Function0Void;
-import dev.scx.function.Function1;
-import dev.scx.function.Function1Void;
-import dev.scx.function.Function2;
-import dev.scx.function.Function3;
+import dev.scx.function.*;
 
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Objects;
 
 // todo 未完成, 本质上是在研究 把递归计算的“调用栈”从 JVM 的隐式栈搬到堆上的显式栈，并用一个执行器恢复这些被暂停的计算，从而实现栈安全的通用递归。
+
 /**
  * StackCall 的构造方法、便利组合器与同步执行器。
  *
@@ -22,7 +18,9 @@ public final class StackCalls {
     private StackCalls() {
     }
 
-    /** 相当于普通方法中的 return value。 */
+    /**
+     * 相当于普通方法中的 return value。
+     */
     public static <T, X extends Throwable> StackCall<T, X> done(T value) {
         return new StackCall.Done<>(value);
     }
@@ -33,7 +31,7 @@ public final class StackCalls {
      * <p>凡是处在递归环上的调用，都必须通过此方法延迟。</p>
      */
     public static <T, X extends Throwable> StackCall<T, X> call(
-            Function0<? extends StackCall<T, X>, X> invocation
+        Function0<? extends StackCall<T, X>, X> invocation
     ) {
         return new StackCall.Call<>(Objects.requireNonNull(invocation));
     }
@@ -49,8 +47,8 @@ public final class StackCalls {
      * }</pre>
      */
     public static <A, R, X extends Throwable> StackCall<R, X> call(
-            Function0<? extends StackCall<A, X>, X> invocation,
-            Function1<? super A, ? extends R, X> afterReturn
+        Function0<? extends StackCall<A, X>, X> invocation,
+        Function1<? super A, ? extends R, X> afterReturn
     ) {
         return StackCalls.<A, X>call(invocation).map(afterReturn);
     }
@@ -61,9 +59,9 @@ public final class StackCalls {
      * <p>很适合“解析子节点 -> 挂到父节点 -> 恢复父节点”这种结构。</p>
      */
     public static <A, R, X extends Throwable> StackCall<R, X> call(
-            Function0<? extends StackCall<A, X>, X> invocation,
-            Function1Void<? super A, X> afterReturn,
-            Function0<? extends StackCall<R, X>, X> next
+        Function0<? extends StackCall<A, X>, X> invocation,
+        Function1Void<? super A, X> afterReturn,
+        Function0<? extends StackCall<R, X>, X> next
     ) {
         Objects.requireNonNull(afterReturn);
         Objects.requireNonNull(next);
@@ -78,16 +76,16 @@ public final class StackCalls {
      * 顺序运行两个计算，第二个计算可以依赖第一个结果，最后组合两个结果。
      */
     public static <A, B, R, X extends Throwable> StackCall<R, X> call(
-            Function0<? extends StackCall<A, X>, X> first,
-            Function1<? super A, ? extends StackCall<B, X>, X> second,
-            Function2<? super A, ? super B, ? extends R, X> result
+        Function0<? extends StackCall<A, X>, X> first,
+        Function1<? super A, ? extends StackCall<B, X>, X> second,
+        Function2<? super A, ? super B, ? extends R, X> result
     ) {
         Objects.requireNonNull(second);
         Objects.requireNonNull(result);
 
         return StackCalls.<A, X>call(first).then(a ->
-                StackCalls.<B, X>call(() -> second.apply(a))
-                        .map(b -> result.apply(a, b))
+            StackCalls.<B, X>call(() -> second.apply(a))
+                .map(b -> result.apply(a, b))
         );
     }
 
@@ -97,26 +95,28 @@ public final class StackCalls {
      * <p>4～9 元版本可以按此模式机械生成。</p>
      */
     public static <A, B, C, R, X extends Throwable> StackCall<R, X> call(
-            Function0<? extends StackCall<A, X>, X> first,
-            Function1<? super A, ? extends StackCall<B, X>, X> second,
-            Function2<? super A, ? super B, ? extends StackCall<C, X>, X> third,
-            Function3<? super A, ? super B, ? super C, ? extends R, X> result
+        Function0<? extends StackCall<A, X>, X> first,
+        Function1<? super A, ? extends StackCall<B, X>, X> second,
+        Function2<? super A, ? super B, ? extends StackCall<C, X>, X> third,
+        Function3<? super A, ? super B, ? super C, ? extends R, X> result
     ) {
         Objects.requireNonNull(second);
         Objects.requireNonNull(third);
         Objects.requireNonNull(result);
 
         return StackCalls.<A, X>call(first).then(a ->
-                StackCalls.<B, X>call(() -> second.apply(a)).then(b ->
-                        StackCalls.<C, X>call(() -> third.apply(a, b))
-                                .map(c -> result.apply(a, b, c))
-                )
+            StackCalls.<B, X>call(() -> second.apply(a)).then(b ->
+                StackCalls.<C, X>call(() -> third.apply(a, b))
+                    .map(c -> result.apply(a, b, c))
+            )
         );
     }
 
-    /** 把一个可能抛异常的无返回值操作包装成 StackCall。 */
+    /**
+     * 把一个可能抛异常的无返回值操作包装成 StackCall。
+     */
     public static <X extends Throwable> StackCall<Void, X> effect(
-            Function0Void<X> action
+        Function0Void<X> action
     ) {
         Objects.requireNonNull(action);
 
@@ -131,22 +131,22 @@ public final class StackCalls {
      */
     @SafeVarargs
     public static <X extends Throwable> StackCall<Void, X> sequence(
-            Function0<? extends StackCall<Void, X>, X>... steps
+        Function0<? extends StackCall<Void, X>, X>... steps
     ) {
         Objects.requireNonNull(steps);
         return sequence(steps, 0);
     }
 
     private static <X extends Throwable> StackCall<Void, X> sequence(
-            Function0<? extends StackCall<Void, X>, X>[] steps,
-            int index
+        Function0<? extends StackCall<Void, X>, X>[] steps,
+        int index
     ) {
         if (index >= steps.length) {
             return done(null);
         }
 
         return StackCalls.<Void, X>call(steps[index]).then(ignored ->
-                StackCalls.call(() -> sequence(steps, index + 1))
+            StackCalls.call(() -> sequence(steps, index + 1))
         );
     }
 
@@ -154,8 +154,8 @@ public final class StackCalls {
      * 栈安全地顺序处理 Iterator 中的所有元素。
      */
     public static <A, X extends Throwable> StackCall<Void, X> forEach(
-            Iterator<? extends A> iterator,
-            Function1<? super A, ? extends StackCall<Void, X>, X> action
+        Iterator<? extends A> iterator,
+        Function1<? super A, ? extends StackCall<Void, X>, X> action
     ) {
         Objects.requireNonNull(iterator);
         Objects.requireNonNull(action);
@@ -167,7 +167,7 @@ public final class StackCalls {
         var value = iterator.next();
 
         return StackCalls.<Void, X>call(() -> action.apply(value)).then(ignored ->
-                StackCalls.call(() -> forEach(iterator, action))
+            StackCalls.call(() -> forEach(iterator, action))
         );
     }
 
@@ -176,7 +176,7 @@ public final class StackCalls {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T, X extends Throwable> T run(
-            StackCall<T, X> initial
+        StackCall<T, X> initial
     ) throws X {
         Objects.requireNonNull(initial);
 
@@ -197,13 +197,13 @@ public final class StackCalls {
 
                 case StackCall.Call<?, ?> call -> {
                     var invocation =
-                            (Function0<? extends StackCall<?, X>, X>) (Function0) call.invocation();
+                        (Function0<? extends StackCall<?, X>, X>) (Function0) call.invocation();
                     current = invocation.apply();
                 }
 
                 case StackCall.Then<?, ?, ?> then -> {
                     continuations.push(
-                            (Function1<Object, StackCall<?, X>, X>) (Function1) then.continuation()
+                        (Function1<Object, StackCall<?, X>, X>) (Function1) then.continuation()
                     );
                     current = (StackCall<?, X>) then.source();
                 }

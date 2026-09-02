@@ -39,7 +39,7 @@ public final class Main {
     private static void assertEquals(Object expected, Object actual, String name) {
         if (!expected.equals(actual)) {
             throw new AssertionError(
-                    name + " failed: expected=" + expected + ", actual=" + actual
+                name + " failed: expected=" + expected + ", actual=" + actual
             );
         }
     }
