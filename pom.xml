@@ -16,6 +16,23 @@
 
     <modules>
         <module>ray-tracing</module>
+        <module>stackcall</module>
     </modules>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>dev.scx</groupId>
+            <artifactId>scx-function</artifactId>
+            <version>${scx-function.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <properties>
+
+        <scx-function.version>0.10.0</scx-function.version>
+
+    </properties>
 
 </project>
