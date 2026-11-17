@@ -7,6 +7,8 @@ import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static dev.scx.physics.Helper.runScene;
+
 /** 二维圆形刚体沙盒；所有物理状态和输入处理均封装在场景内。 */
 public class TestScene1 implements Scene {
 
@@ -258,5 +260,10 @@ public class TestScene1 implements Scene {
             inverseMass = 1 / (radius * radius); // 同密度圆盘，质量与面积成正比
             inverseInertia = 2 * inverseMass / (radius * radius);
         }
+    }
+
+
+    static void main() {
+        runScene(new TestScene1());
     }
 }

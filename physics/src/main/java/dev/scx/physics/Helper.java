@@ -2,9 +2,9 @@ package dev.scx.physics;
 
 import javax.swing.*;
 
-public class Main {
+public class Helper {
 
-    static void main() {
+    public static void runScene(Scene scene) {
         SwingUtilities.invokeLater(() -> {
             // 创建窗口
             var jFrame = new JFrame();
@@ -16,7 +16,7 @@ public class Main {
             jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // 设置主内容面板
-            jFrame.setContentPane(new SceneRunner(new TestScene1()));
+            jFrame.setContentPane(new SceneRunner(scene));
 
             // 显示窗口
             jFrame.setVisible(true);
@@ -24,5 +24,4 @@ public class Main {
 
         });
     }
-
 }
