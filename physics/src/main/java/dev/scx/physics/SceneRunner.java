@@ -44,7 +44,7 @@ public class SceneRunner extends JPanel {
         });
 
 
-        // 这里通过轮询判断 是否已经可以正确获取布局
+        // 这里通过轮询判断 是否已经可以安全调用 start
         new Timer(1000 / FPS, e -> {
             if (getWidth() <= 0 || getHeight() <= 0) {
                 return;
