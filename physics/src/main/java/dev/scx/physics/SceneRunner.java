@@ -2,9 +2,7 @@ package dev.scx.physics;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,6 +12,8 @@ public class SceneRunner extends JPanel {
     public static final int FPS = 60;
 
     private final Scene scene;
+
+    private final Timer updateTimer;
 
     // 当前按下的按键
     private final Set<Integer> keyDowns = new HashSet<>();
@@ -39,10 +39,28 @@ public class SceneRunner extends JPanel {
                 AWTEvent.MOUSE_MOTION_EVENT_MASK
         );
 
-        var timer = new Timer(1000 / FPS, e -> {
+        updateTimer = new Timer(1000 / FPS, e -> {
             _update();
         });
-        timer.start();
+
+
+        // 这里通过轮询判断 是否已经可以正确获取布局
+        new Timer(1000 / FPS, e -> {
+            if (getWidth() <= 0 || getHeight() <= 0) {
+                return;
+            }
+
+            // 启动条件满足，结束轮询。
+            ((Timer) e.getSource()).stop();
+
+            _start();
+        }).start();
+    }
+
+    private void _start() {
+        var context = createSceneContext();
+        scene.start(context);
+        updateTimer.start();
     }
 
     private void _update() {
