@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class TestScene implements Scene {
 
-    private ArrayList<Ball> balls;
+    private final ArrayList<Ball> balls;
 
     public TestScene() {
         this.balls = new ArrayList<>();

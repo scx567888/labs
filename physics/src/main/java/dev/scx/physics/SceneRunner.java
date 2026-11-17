@@ -46,7 +46,7 @@ public class SceneRunner extends JPanel {
     }
 
     private void _update() {
-        var context=createSceneContext();
+        var context = createSceneContext();
         scene.update(context);
         repaint();
     }
