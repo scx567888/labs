@@ -14,7 +14,8 @@ public class TestScene implements Scene {
     }
 
     @Override
-    public void update(Input input) {
+    public void update(SceneContext context) {
+        var input = context.input();
         if (balls.isEmpty()) {
             return;
         }
@@ -34,7 +35,7 @@ public class TestScene implements Scene {
     }
 
     @Override
-    public void render(Graphics g) {
+    public void render(Graphics g, SceneContext context) {
         for (var ball : balls) {
 
             // 画一个红色的小球

@@ -151,4 +151,27 @@ public class SceneRunner extends JPanel {
 
     }
 
+
+    public record SceneRunnerViewport(
+        int width,
+        int height
+    ) implements Viewport {
+
+    }
+
+    public record SceneRunnerWindowInfo(
+        int x,
+        int y,
+        int width,
+        int height
+    ) implements WindowInfo {
+
+    }
+
+    public record SceneRunnerSceneContext(
+        Input input,
+        Viewport viewport,
+        WindowInfo window
+    ) implements SceneContext {}
+
 }
