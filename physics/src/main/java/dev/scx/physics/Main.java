@@ -16,7 +16,7 @@ public class Main {
             jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // 设置主内容面板
-            jFrame.setContentPane(new SceneRunner(new TestScene()));
+            jFrame.setContentPane(new SceneRunner(new TestScene1()));
 
             // 显示窗口
             jFrame.setVisible(true);

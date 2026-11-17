@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /** 二维圆形刚体沙盒；所有物理状态和输入处理均封装在场景内。 */
-public class TestScene implements Scene {
+public class TestScene1 implements Scene {
 
     private static final double GRAVITY = 1100; // px/s²
     private static final double RESTITUTION = 0.45;
