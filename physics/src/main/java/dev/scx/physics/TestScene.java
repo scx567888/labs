@@ -35,8 +35,7 @@ public class TestScene implements Scene {
 
     @Override
     public void render(Graphics g) {
-
-        for (Ball ball : balls) {
+        for (var ball : balls) {
 
             // 画一个红色的小球
             g.setColor(ball.color);
