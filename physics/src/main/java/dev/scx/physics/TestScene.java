@@ -15,6 +15,7 @@ public class TestScene implements Scene {
 
     @Override
     public void update(SceneContext context) {
+        System.out.println(context.viewport());
         var input = context.input();
         if (balls.isEmpty()) {
             return;
