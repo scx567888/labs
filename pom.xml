@@ -17,6 +17,7 @@
     <modules>
         <module>ray-tracing</module>
         <module>stackcall</module>
+        <module>physics</module>
     </modules>
 
     <dependencies>
