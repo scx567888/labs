@@ -1,12 +1,27 @@
 package dev.scx.physics;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
-public class TestScene implements Scene{
+public class TestScene implements Scene {
+
+    private int ballX = 0;
+    private int ballY = 0;
 
     @Override
     public void update(Input input) {
-        System.out.println(123);
+        if (input.keyDown(KeyEvent.VK_LEFT)) {
+            ballX -= 2;
+        }
+        if (input.keyDown(KeyEvent.VK_RIGHT)) {
+            ballX += 2;
+        }
+        if (input.keyDown(KeyEvent.VK_UP)) {
+            ballY -= 2;
+        }
+        if (input.keyDown(KeyEvent.VK_DOWN)) {
+            ballY += 2;
+        }
     }
 
     @Override
@@ -16,7 +31,7 @@ public class TestScene implements Scene{
 
         // 画一个红色的小球
         g.setColor(Color.RED);
-        g.fillOval(100, 100, 30, 30);
+        g.fillOval(ballX, ballY, 30, 30);
     }
 
 }
