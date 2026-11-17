@@ -2,36 +2,53 @@ package dev.scx.physics;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 public class TestScene implements Scene {
 
-    private int ballX = 0;
-    private int ballY = 0;
+    private ArrayList<Ball> balls;
+
+    public TestScene() {
+        this.balls = new ArrayList<>();
+        balls.add(new Ball());
+    }
 
     @Override
     public void update(Input input) {
+        if (balls.isEmpty()) {
+            return;
+        }
+        var ball = balls.get(0);
         if (input.keyDown(KeyEvent.VK_LEFT)) {
-            ballX -= 2;
+            ball.x -= 3;
         }
         if (input.keyDown(KeyEvent.VK_RIGHT)) {
-            ballX += 2;
+            ball.x += 3;
         }
         if (input.keyDown(KeyEvent.VK_UP)) {
-            ballY -= 2;
+            ball.y -= 3;
         }
         if (input.keyDown(KeyEvent.VK_DOWN)) {
-            ballY += 2;
+            ball.y += 3;
         }
     }
 
     @Override
     public void render(Graphics g) {
 
-        System.out.println(1);
+        for (Ball ball : balls) {
 
-        // 画一个红色的小球
-        g.setColor(Color.RED);
-        g.fillOval(ballX, ballY, 30, 30);
+            // 画一个红色的小球
+            g.setColor(ball.color);
+            g.fillOval(ball.x, ball.y, 30, 30);
+        }
+
+    }
+
+    static class Ball {
+        int x;
+        int y;
+        Color color = Color.RED;
     }
 
 }
