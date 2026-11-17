@@ -35,7 +35,7 @@ public class TestScene implements Scene {
     }
 
     @Override
-    public void render(Graphics g, SceneContext context) {
+    public void render(Graphics g) {
         for (var ball : balls) {
 
             // 画一个红色的小球

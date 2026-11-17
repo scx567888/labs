@@ -15,7 +15,7 @@ public interface Scene {
     }
 
     /// 渲染回调 (暂定 60 FPS)
-    default void render(Graphics g, SceneContext context) {
+    default void render(Graphics g) {
 
     }
 

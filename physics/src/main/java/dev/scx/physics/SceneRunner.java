@@ -46,14 +46,31 @@ public class SceneRunner extends JPanel {
     }
 
     private void _update() {
+        var context=createSceneContext();
+        scene.update(context);
+        repaint();
+    }
+
+    private SceneRunnerSceneContext createSceneContext() {
         var input = new SceneRunnerInput(
             Set.copyOf(keyDowns),
             Set.copyOf(mouseDowns),
             mouseX,
             mouseY
         );
-        scene.update(input);
-        repaint();
+
+        var viewport = new SceneRunnerViewport(getWidth(), getHeight());
+
+        var _window = SwingUtilities.getWindowAncestor(this);
+
+        var window = new SceneRunnerWindowInfo(
+            _window.getX(),
+            _window.getY(),
+            _window.getWidth(),
+            _window.getHeight()
+        );
+
+        return new SceneRunnerSceneContext(input, viewport, window);
     }
 
     // 绘制回调
