@@ -5,7 +5,6 @@ import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,7 +46,7 @@ public class SceneRunner extends JPanel {
     }
 
     private void _update() {
-        var input=new SceneRunnerInput(
+        var input = new SceneRunnerInput(
             Set.copyOf(keyDowns),
             Set.copyOf(mouseDowns),
             mouseX,
